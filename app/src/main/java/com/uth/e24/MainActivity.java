@@ -1,0 +1,98 @@
+package com.uth.e24;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
+
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.TextInputEditText;
+import com.kyanogen.signatureview.SignatureView;
+import com.uth.e24.adapter.adapterSignature;
+import com.uth.e24.database.DBSIGNATURE;
+import com.uth.e24.models.cSignature;
+
+import java.util.ArrayList;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener
+{
+    private FloatingActionButton oFloatingActionButton;
+    private RecyclerView oRecyclerView;
+
+    private adapterSignature oAdapterSignature;
+
+    private DBSIGNATURE oDBSIGNATURE;
+    private ArrayList<cSignature> oSignatureArrayList = new ArrayList<>();
+
+    static final int REQUEST_CODE = 200;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        this.oFloatingActionButton = findViewById(R.id.floatingButtonSignature);
+        this.oRecyclerView = findViewById(R.id.RecyclerViewSignature);
+
+        LinearLayoutManager mLinearLayoutManager = new LinearLayoutManager(MainActivity.this);
+        mLinearLayoutManager.setOrientation(RecyclerView.VERTICAL);
+        oDBSIGNATURE = new DBSIGNATURE(MainActivity.this);
+
+        oSignatureArrayList = oDBSIGNATURE.leerSignature();
+        oAdapterSignature = new adapterSignature(oSignatureArrayList);
+
+        this.oFloatingActionButton.setOnClickListener(this::onClick);
+        oRecyclerView.setLayoutManager(mLinearLayoutManager);
+
+        oRecyclerView.setAdapter(oAdapterSignature);
+    }
+
+
+    @Override
+    protected void onPostResume()
+    {
+        updateSignature();
+        super.onResume();
+    }
+
+    public void updateSignature()
+    {
+        oSignatureArrayList.clear();
+        ArrayList<cSignature> oA = oDBSIGNATURE.leerSignature();
+        for (int i = 0;i<oA.size();i++)
+        {
+            cSignature oS = new cSignature();
+            oS.setDescripcion(oA.get(i).getDescripcion());
+            oS.setFirma_digital(oA.get(i).getFirma_digital());
+            oSignatureArrayList.add(oS);
+        }
+        oAdapterSignature.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onClick(View view)
+    {
+        if(view.getId() == R.id.floatingButtonSignature)
+        {
+            Intent oIntent = new Intent(MainActivity.this, NewSignature.class);
+            startActivityForResult(oIntent,REQUEST_CODE);
+        }
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE)
+        {
+            updateSignature();
+        }
+    }
+
+}
